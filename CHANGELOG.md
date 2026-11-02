@@ -5,6 +5,12 @@ All notable changes to this repository are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-02
+
+### Added
+- Clickable preview image of the platform map at the top of the README, in light and dark versions
+  (`images/platform-map-light.png`, `images/platform-map-dark.png`) that follow the viewer's GitHub theme.
+
 ## [0.1.0] - 2026-11-02
 
 ### Added
