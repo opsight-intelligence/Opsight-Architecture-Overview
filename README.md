@@ -16,6 +16,19 @@ independent while speaking the same language.
 
 ---
 
+## Platform map
+
+An interactive map of the platform is published at
+**[opsight-intelligence.github.io/Opsight-Architecture-Overview/architecture.html](https://opsight-intelligence.github.io/Opsight-Architecture-Overview/architecture.html)**.
+It shows the domain engines, the shared pipeline and intelligence contract, the bus and federation gateway, the
+product lines and the customers they serve. Click a node to see everything it connects to.
+
+OpSentry, the guardrail product for AI coding assistants, is open source:
+[opsentry](https://github.com/opsight-intelligence/opsentry) and the free
+[opsentry-action](https://github.com/opsight-intelligence/opsentry-action) for pull request scans.
+
+---
+
 ## Design principles
 
 - **Contract-first** — every engine publishes to one shared, versioned schema,
