@@ -1,0 +1,342 @@
+<!doctype html>
+<!--
+Public map of the Opsight Intelligence platform: domain engines, the shared pipeline and intelligence contract,
+the bus and gateway, the product lines and who they serve, the kinds of data used, and the open-source OpSentry repos.
+It is a trimmed, high-level version of the internal graph and names no private repository, host, vendor or client.
+It is a single self-contained page with no external scripts, so it works from GitHub Pages or a local file.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Opsight Platform Map</title>
+<style>
+:root {
+  --bg: #f7f6f3; --panel: #ffffff; --ink: #1d1d1b; --muted: #6b6a65; --line: #d9d6cf; --edge: rgba(60,60,55,.18);
+  --edge-hot: rgba(30,30,28,.75); --repo: #2f5d8a; --team: #b5562b; --engine: #7a5c99; --family: #4b4b47;
+  --event: #3f8a5b; --tool: #b08a1e; --persona: #c23b6b; --system: #2a8a8a; --focus: #1d1d1b;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #161614; --panel: #1f1f1c; --ink: #ecebe6; --muted: #a3a29b; --line: #34342f; --edge: rgba(220,220,210,.14);
+  --edge-hot: rgba(240,240,230,.8); --repo: #6fa3d6; --team: #e08a5c; --engine: #ae8fd0; --family: #bdbcb4;
+  --event: #6cc08c; --tool: #e2be4f; --persona: #ee6f9c; --system: #5cc4c4; --focus: #ecebe6;
+} }
+:root[data-theme="dark"] {
+  --bg: #161614; --panel: #1f1f1c; --ink: #ecebe6; --muted: #a3a29b; --line: #34342f; --edge: rgba(220,220,210,.14);
+  --edge-hot: rgba(240,240,230,.8); --repo: #6fa3d6; --team: #e08a5c; --engine: #ae8fd0; --family: #bdbcb4;
+  --event: #6cc08c; --tool: #e2be4f; --persona: #ee6f9c; --system: #5cc4c4; --focus: #ecebe6;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink);
+  font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+.app { display: grid; grid-template-columns: 300px 1fr; height: 100vh; }
+aside { background: var(--panel); border-right: 1px solid var(--line); padding: 16px; overflow-y: auto; }
+h1 { font-size: 17px; margin: 0 0 4px; }
+.sub { color: var(--muted); font-size: 12.5px; margin: 0 0 14px; }
+h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 18px 0 8px; }
+input[type=search] { width: 100%; padding: 7px 9px; border: 1px solid var(--line); border-radius: 6px;
+  background: var(--bg); color: var(--ink); font: inherit; }
+.kinds label { display: flex; align-items: center; gap: 8px; padding: 3px 0; cursor: pointer; }
+.dot { width: 11px; height: 11px; border-radius: 50%; flex: none; }
+.count { margin-left: auto; color: var(--muted); font-variant-numeric: tabular-nums; font-size: 12px; }
+#detail { border-top: 1px solid var(--line); padding-top: 4px; }
+#detail .name { font-weight: 600; font-size: 15px; margin: 6px 0 2px; }
+#detail .kind { color: var(--muted); font-size: 12px; }
+#detail p { margin: 8px 0; }
+#detail ul { margin: 4px 0 0; padding-left: 0; list-style: none; }
+#detail li { padding: 2px 0; font-size: 13px; }
+#detail li button { all: unset; cursor: pointer; border-bottom: 1px dotted var(--muted); }
+#detail .rel { color: var(--muted); font-size: 12px; }
+.hint { color: var(--muted); font-size: 12.5px; }
+main { position: relative; overflow: hidden; }
+svg { width: 100%; height: 100%; display: block; cursor: grab; }
+svg.dragging { cursor: grabbing; }
+.edge { stroke: var(--edge); stroke-width: 1; }
+.edge.hot { stroke: var(--edge-hot); stroke-width: 1.6; }
+.node circle { stroke: var(--panel); stroke-width: 1.5; cursor: pointer; }
+.node text { font-size: 10.5px; fill: var(--ink); pointer-events: none; paint-order: stroke;
+  stroke: var(--bg); stroke-width: 3px; stroke-linejoin: round; }
+.node.dim, .edge.dim { opacity: .12; }
+.node.minor text { display: none; }
+svg.zoomed .node.minor text, .node.minor.lit text { display: block; }
+.node.sel circle { stroke: var(--focus); stroke-width: 3; }
+.toolbar { position: absolute; right: 12px; top: 12px; display: flex; gap: 6px; }
+.toolbar button { font: inherit; font-size: 12.5px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 6px;
+  background: var(--panel); color: var(--ink); cursor: pointer; }
+@media (max-width: 760px) {
+  .app { grid-template-columns: 1fr; grid-template-rows: auto 70vh; height: auto; }
+  aside { border-right: none; border-bottom: 1px solid var(--line); }
+}
+</style>
+</head>
+<body>
+<div class="app">
+<aside>
+  <h1>Opsight Intelligence platform</h1>
+  <p class="sub">How the platform fits together: domain engines, the shared pipeline and contract, the bus and
+    gateway, product lines and who they serve. Implementation repositories are private. November 2026.</p>
+  <input type="search" id="q" placeholder="Search, e.g. sanctions or entity" aria-label="Search nodes">
+  <h2>Show</h2>
+  <div class="kinds" id="kinds"></div>
+  <h2>Selected</h2>
+  <div id="detail"><p class="hint">Click a node to see what it is and everything it connects to. Hover to highlight
+    its neighbours, drag nodes, scroll to zoom, drag the background to pan.</p></div>
+</aside>
+<main>
+  <div class="toolbar"><button id="fit">Fit</button><button id="theme">Theme</button></div>
+  <svg id="g" role="img" aria-label="Opsight platform map"><g id="vp"><g id="edges"></g><g id="nodes"></g></g></svg>
+</main>
+</div>
+<script>
+const KINDS = {
+  component: ["Platform component", "--repo", 10], engine: ["Domain engine", "--engine", 10],
+  stage: ["Pipeline stage", "--tool", 7], concept: ["Contract concept", "--event", 6],
+  line: ["Product line", "--team", 11], segment: ["Customer segment", "--family", 8],
+  source: ["Data source", "--system", 7], oss: ["Open source", "--persona", 8],
+};
+const N = [];
+const E = [];
+function node(id, kind, info, label) { N.push({ id, kind, info, label: label || id }); }
+function edge(a, b, rel) { E.push({ a, b, rel }); }
+
+const COMPONENTS = {
+  "Intelligence contract": "One shared, versioned schema every engine publishes to, so domains evolve without breaking consumers.",
+  "Intelligence bus": "Postgres-backed store of every published artifact, with the entity graph, sanctions screening and consortium exchange beside it.",
+  "Entity graph": "Real-world entities resolved across domains, linked by typed edges that each cite the artifact behind them.",
+  "Sanctions screening": "Matches entities against public sanctions lists and records every match with its evidence.",
+  "Consortium exchange": "Members share hashed risk signals; a key reported by two or more members becomes a corroboration, and no raw data leaves a member.",
+  "Federation gateway (MCP)": "Exposes the bus as MCP tools and an HTTP API for AI personas, the analyst console and client agents.",
+  "Analyst console": "Web console for analysts over the gateway, with role-based access per client.",
+  "Alerting": "Change alerts per client subscription, delivered by file, webhook or email.",
+  "AI personas": "Executive-facing AI personas that read structured assessments through the gateway.",
+  "Orchestration": "Scheduled runs of every engine, the platform layer and the alerts.",
+};
+for (const [id, info] of Object.entries(COMPONENTS)) node(id, "component", info);
+for (const c of ["Entity graph", "Sanctions screening", "Consortium exchange"]) edge("Intelligence bus", c, "holds");
+edge("Intelligence bus", "Intelligence contract", "validates against");
+edge("Federation gateway (MCP)", "Intelligence bus", "reads"); edge("Alerting", "Intelligence bus", "listens to");
+edge("Analyst console", "Federation gateway (MCP)", "calls"); edge("AI personas", "Federation gateway (MCP)", "queries");
+
+const STAGES = ["Collect", "Normalize", "Enrich", "Detect", "Score", "Assess", "Publish"];
+const STAGE_INFO = {
+  Collect: "Pull raw signals from the engine's sources.", Normalize: "Clean and describe signals as observations.",
+  Enrich: "Add context: resolved entities, registries, history.", Detect: "Find patterns across observations.",
+  Score: "Rate confidence and severity.", Assess: "Judge findings into an assessment with a recommendation.",
+  Publish: "Write one intelligence artifact to the bus.",
+};
+for (const s of STAGES) node(s, "stage", STAGE_INFO[s]);
+for (let i = 1; i < STAGES.length; i++) edge(STAGES[i - 1], STAGES[i], "feeds");
+edge("Publish", "Intelligence bus", "writes to");
+
+const ENGINES = {
+  "Fraud engine": ["Open-source intelligence on fraud and mule networks.", "Fraud intelligence", ["Public messaging channels"]],
+  "Procurement engine": ["Public tender and company registry intelligence.", "Procurement intelligence", ["Public tender data", "Corporate disclosures"]],
+  "Manufacturing engine": ["Operations intelligence for mould and press makers.", "Manufacturing intelligence", ["Plant and ERP data"]],
+};
+const SOURCES = {
+  "Public messaging channels": "Public broadcast channels where fraud services advertise.",
+  "Public tender data": "Public procurement open data: notices, awards and prices.",
+  "Corporate disclosures": "Public company registry and disclosure filings.",
+  "Plant and ERP data": "The customer's own machine, production and ERP records, read in place.",
+  "Sanctions lists": "Public sanctions lists such as OFAC, UN, EU and UK.",
+};
+for (const [id, info] of Object.entries(SOURCES)) node(id, "source", info);
+edge("Sanctions screening", "Sanctions lists", "screens against");
+for (const [id, [info, line, sources]] of Object.entries(ENGINES)) {
+  node(id, "engine", info); edge(id, "Collect", "runs the pipeline from"); edge(id, "Intelligence contract", "conforms to");
+  edge(id, line, "delivers"); edge("Orchestration", id, "schedules"); for (const s of sources) edge(id, s, "collects from");
+}
+edge("Orchestration", "Alerting", "schedules");
+
+const CONCEPTS = {
+  Signal: "Raw collected input.", Observation: "A described signal.", Finding: "A detected pattern over observations.",
+  Assessment: "A judgement over findings, with confidence and severity.",
+  "Intelligence artifact": "One published piece of intelligence: domain, source, type, confidence, severity.",
+  Evidence: "Why the artifact says what it says, with a reference to the underlying record.",
+  Recommendation: "What to do about it, with a priority.", "Legal block": "Licence, attributions and disclaimers, required on every artifact.",
+  Entity: "The real-world thing an artifact is about, resolved across domains.",
+};
+for (const [id, info] of Object.entries(CONCEPTS)) { node(id, "concept", info); edge("Intelligence contract", id, "defines"); }
+edge("Observation", "Signal", "cites"); edge("Finding", "Observation", "cites"); edge("Assessment", "Finding", "cites");
+for (const p of ["Assessment", "Evidence", "Recommendation", "Legal block"]) edge("Intelligence artifact", p, "embeds");
+edge("Intelligence artifact", "Entity", "is about"); edge("Entity graph", "Entity", "links");
+edge("Collect", "Signal", "produces"); edge("Normalize", "Observation", "produces"); edge("Detect", "Finding", "produces");
+edge("Assess", "Assessment", "produces"); edge("Publish", "Intelligence artifact", "produces");
+
+const LINES = {
+  "Fraud intelligence": ["Mule and wallet feeds, early warning and periodic intelligence packages.", ["Banks and fintech", "Crypto exchanges"]],
+  "Procurement intelligence": ["Prospect lists and should-price files built from public tender data.", ["Bid consulting firms"]],
+  "Manufacturing intelligence": ["Throughput, utilisation, cycle efficiency and ROI for mould makers.", ["Mould and press makers"]],
+  OpSentry: ["Guardrails for AI coding assistants: local hooks, pull request scans and governance reports.", ["Engineering teams"]],
+};
+for (const [id, [info, segments]] of Object.entries(LINES)) {
+  node(id, "line", info); for (const s of segments) { if (!N.some(n => n.id === s)) node(s, "segment", "Buyer group."); edge(id, s, "sold to"); }
+}
+edge("Consortium exchange", "Fraud intelligence", "powers"); edge("Sanctions screening", "Fraud intelligence", "powers");
+edge("Alerting", "Fraud intelligence", "delivers"); edge("Federation gateway (MCP)", "Procurement intelligence", "serves");
+
+const OSS = {
+  opsentry: "OpSentry guardrail hooks for Claude Code. Apache-2.0. github.com/opsight-intelligence/opsentry",
+  "opsentry-action": "GitHub Action that runs OpSentry scans on pull requests, free. github.com/opsight-intelligence/opsentry-action",
+  "homebrew-opsentry": "Homebrew tap for OpSentry: brew tap opsight-intelligence/opsentry, then brew install opsentry. Also on PyPI: pip install opsentry.",
+};
+for (const [id, info] of Object.entries(OSS)) node(id, "oss", info);
+edge("opsentry", "OpSentry", "delivers"); edge("opsentry-action", "OpSentry", "delivers"); edge("homebrew-opsentry", "opsentry", "packages");
+</script>
+<script>
+const byId = new Map(N.map(n => [n.id, n]));
+for (const e of E) { if (!byId.has(e.a) || !byId.has(e.b)) console.warn("missing node for edge", e); }
+const adj = new Map(N.map(n => [n.id, []]));
+for (const e of E) { adj.get(e.a).push([e.b, e.rel, "out"]); adj.get(e.b).push([e.a, e.rel, "in"]); }
+const PASSIVE = {
+  holds: "held by", "validates against": "validates", reads: "read by", "listens to": "listened to by", calls: "called by",
+  queries: "queried by", feeds: "fed by", "writes to": "written to by", "screens against": "screened against by",
+  "runs the pipeline from": "starts the pipeline of", "conforms to": "followed by", delivers: "delivered by",
+  schedules: "scheduled by", "collects from": "collected by", defines: "defined by", cites: "cited by", embeds: "embedded in",
+  "is about": "subject of", links: "linked by", produces: "produced by", "sold to": "buys", powers: "powered by",
+  serves: "served by", packages: "packaged by",
+};
+const shown = new Set(Object.keys(KINDS));
+const SVG_NS = "http://www.w3.org/2000/svg";
+const svg = document.getElementById("g"), vp = document.getElementById("vp");
+const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+let view = { x: 0, y: 0, k: 1 }, selected = null, query = "";
+
+N.forEach((n, i) => {
+  const a = i * 2.399963, r = 30 * Math.sqrt(i + 1);
+  n.x = Math.cos(a) * r; n.y = Math.sin(a) * r; n.vx = 0; n.vy = 0; n.deg = adj.get(n.id).length;
+});
+const edgeEls = E.map(e => {
+  const l = document.createElementNS(SVG_NS, "line"); l.setAttribute("class", "edge");
+  document.getElementById("edges").appendChild(l); return l;
+});
+const nodeEls = N.map(n => {
+  const g = document.createElementNS(SVG_NS, "g");
+  g.setAttribute("class", "node");
+  const c = document.createElementNS(SVG_NS, "circle"); c.setAttribute("r", KINDS[n.kind][2] + Math.min(n.deg, 12) * .35);
+  const t = document.createElementNS(SVG_NS, "text"); t.textContent = n.label; t.setAttribute("dy", "-" + (KINDS[n.kind][2] + 5));
+  t.setAttribute("text-anchor", "middle"); g.append(c, t); document.getElementById("nodes").appendChild(g);
+  g.addEventListener("mouseenter", () => highlight(n.id)); g.addEventListener("mouseleave", () => highlight(selected));
+  g.addEventListener("pointerdown", ev => startDrag(ev, n)); g.addEventListener("click", ev => { ev.stopPropagation(); select(n.id); });
+  return g;
+});
+
+function paintColors() { N.forEach((n, i) => nodeEls[i].firstChild.setAttribute("fill", css(KINDS[n.kind][1]))); }
+function visible(n) { return shown.has(n.kind); }
+
+function tick(alpha) {
+  const vis = N.filter(visible);
+  for (let i = 0; i < vis.length; i++) for (let j = i + 1; j < vis.length; j++) {
+    const a = vis[i], b = vis[j]; let dx = b.x - a.x, dy = b.y - a.y, d2 = dx * dx + dy * dy || 1;
+    if (d2 > 360000) continue;
+    const f = 5200 / d2 * alpha, d = Math.sqrt(d2); dx /= d; dy /= d;
+    a.vx -= dx * f; a.vy -= dy * f; b.vx += dx * f; b.vy += dy * f;
+  }
+  for (const e of E) {
+    const a = byId.get(e.a), b = byId.get(e.b); if (!visible(a) || !visible(b)) continue;
+    const dx = b.x - a.x, dy = b.y - a.y, d = Math.sqrt(dx * dx + dy * dy) || 1, f = (d - 125) * .02 * alpha;
+    a.vx += dx / d * f; a.vy += dy / d * f; b.vx -= dx / d * f; b.vy -= dy / d * f;
+  }
+  for (const n of vis) {
+    if (n.fixed) { n.vx = n.vy = 0; continue; }
+    n.vx -= n.x * .0025 * alpha; n.vy -= n.y * .0025 * alpha;
+    n.vx *= .6; n.vy *= .6; n.x += n.vx; n.y += n.vy;
+  }
+}
+function draw() {
+  vp.setAttribute("transform", `translate(${view.x},${view.y}) scale(${view.k})`);
+  svg.classList.toggle("zoomed", view.k > 1.3);
+  E.forEach((e, i) => {
+    const a = byId.get(e.a), b = byId.get(e.b), l = edgeEls[i];
+    l.style.display = visible(a) && visible(b) ? "" : "none";
+    l.setAttribute("x1", a.x); l.setAttribute("y1", a.y); l.setAttribute("x2", b.x); l.setAttribute("y2", b.y);
+  });
+  N.forEach((n, i) => {
+    nodeEls[i].style.display = visible(n) ? "" : "none";
+    nodeEls[i].setAttribute("transform", `translate(${n.x},${n.y})`);
+  });
+}
+let alpha = 1;
+function run() { if (alpha > .02) { tick(alpha); alpha *= .985; draw(); } requestAnimationFrame(run); }
+function reheat(v) { alpha = Math.max(alpha, v); }
+
+function highlight(id) {
+  const near = new Set(id ? [id, ...adj.get(id).map(x => x[0])] : []);
+  const q = query.toLowerCase(), match = n => q && (n.id.toLowerCase().includes(q) || n.info.toLowerCase().includes(q));
+  const active = id || q;
+  N.forEach((n, i) => {
+    const on = !active || near.has(n.id) || match(n);
+    nodeEls[i].classList.toggle("dim", !on); nodeEls[i].classList.toggle("sel", n.id === selected);
+    nodeEls[i].classList.toggle("lit", !!active && on);
+  });
+  E.forEach((e, i) => {
+    const hot = id && (e.a === id || e.b === id);
+    edgeEls[i].classList.toggle("hot", !!hot); edgeEls[i].classList.toggle("dim", !!active && !hot);
+  });
+}
+function select(id) {
+  selected = id; highlight(id);
+  const box = document.getElementById("detail");
+  if (!id) { box.innerHTML = '<p class="hint">Click a node to see what it is and everything it connects to.</p>'; return; }
+  const n = byId.get(id), rows = adj.get(id).slice().sort((x, y) => x[1].localeCompare(y[1]) || x[0].localeCompare(y[0]));
+  box.innerHTML = "";
+  const name = document.createElement("div"); name.className = "name"; name.textContent = n.label;
+  const kind = document.createElement("div"); kind.className = "kind"; kind.textContent = KINDS[n.kind][0];
+  const p = document.createElement("p"); p.textContent = n.info;
+  const ul = document.createElement("ul");
+  for (const [other, rel, dir] of rows) {
+    const li = document.createElement("li"), r = document.createElement("span"), b = document.createElement("button");
+    r.className = "rel"; r.textContent = (dir === "out" ? rel : PASSIVE[rel] || rel) + " ";
+    b.textContent = other; b.addEventListener("click", () => select(other)); li.append(r, b); ul.appendChild(li);
+  }
+  const h = document.createElement("div"); h.className = "kind"; h.textContent = rows.length + " connections";
+  box.append(name, kind, p, h, ul);
+}
+
+function toSvg(ev) { const r = svg.getBoundingClientRect(); return { x: (ev.clientX - r.left - view.x) / view.k, y: (ev.clientY - r.top - view.y) / view.k }; }
+let drag = null;
+function startDrag(ev, n) { ev.stopPropagation(); drag = { n }; n.fixed = true; svg.setPointerCapture(ev.pointerId); }
+svg.addEventListener("pointerdown", ev => { drag = { pan: true, sx: ev.clientX - view.x, sy: ev.clientY - view.y }; svg.classList.add("dragging"); });
+svg.addEventListener("pointermove", ev => {
+  if (!drag) return;
+  if (drag.pan) { view.x = ev.clientX - drag.sx; view.y = ev.clientY - drag.sy; draw(); return; }
+  const p = toSvg(ev); drag.n.x = p.x; drag.n.y = p.y; reheat(.3); draw();
+});
+svg.addEventListener("pointerup", () => { if (drag && drag.n) drag.n.fixed = false; drag = null; svg.classList.remove("dragging"); });
+svg.addEventListener("click", () => select(null));
+svg.addEventListener("wheel", ev => {
+  ev.preventDefault(); const r = svg.getBoundingClientRect(), mx = ev.clientX - r.left, my = ev.clientY - r.top;
+  const k = Math.min(4, Math.max(.2, view.k * Math.exp(-ev.deltaY * .0015)));
+  view.x = mx - (mx - view.x) * k / view.k; view.y = my - (my - view.y) * k / view.k; view.k = k; draw();
+}, { passive: false });
+
+function fit() {
+  const vis = N.filter(visible); if (!vis.length) return;
+  const xs = vis.map(n => n.x), ys = vis.map(n => n.y), r = svg.getBoundingClientRect(), pad = 60;
+  const w = Math.max(...xs) - Math.min(...xs) + pad * 2, h = Math.max(...ys) - Math.min(...ys) + pad * 2;
+  view.k = Math.min(2, Math.min(r.width / w, r.height / h));
+  view.x = r.width / 2 - (Math.min(...xs) + Math.max(...xs)) / 2 * view.k;
+  view.y = r.height / 2 - (Math.min(...ys) + Math.max(...ys)) / 2 * view.k; draw();
+}
+document.getElementById("fit").addEventListener("click", fit);
+document.getElementById("theme").addEventListener("click", () => {
+  const root = document.documentElement, dark = getComputedStyle(root).getPropertyValue("--bg").trim() === "#161614";
+  root.setAttribute("data-theme", dark ? "light" : "dark"); paintColors();
+});
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", paintColors);
+document.getElementById("q").addEventListener("input", ev => { query = ev.target.value.trim(); highlight(selected); });
+
+const kindsBox = document.getElementById("kinds");
+for (const [k, [label, color]] of Object.entries(KINDS)) {
+  const l = document.createElement("label"), cb = document.createElement("input"), dot = document.createElement("span");
+  const c = document.createElement("span"); cb.type = "checkbox"; cb.checked = true; dot.className = "dot";
+  dot.style.background = `var(${color})`; c.className = "count"; c.textContent = N.filter(n => n.kind === k).length;
+  cb.addEventListener("change", () => { cb.checked ? shown.add(k) : shown.delete(k); reheat(.6); draw(); });
+  l.append(cb, dot, document.createTextNode(label), c); kindsBox.appendChild(l);
+}
+paintColors();
+for (let i = 0; i < 500; i++) tick(1 - i / 520);
+alpha = .05; draw(); fit(); run();
+</script>
+</body>
+</html>
