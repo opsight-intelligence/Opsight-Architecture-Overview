@@ -4,6 +4,15 @@
 > Implementation repositories are private; this document describes the
 > architecture and design principles, not internal details.
 
+<a href="https://opsight-intelligence.github.io/Opsight-Architecture-Overview/architecture.html">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/opsight-intelligence/Opsight-Architecture-Overview/main/images/platform-map-dark.png">
+    <img alt="Interactive map of the Opsight Intelligence platform" src="https://raw.githubusercontent.com/opsight-intelligence/Opsight-Architecture-Overview/main/images/platform-map-light.png">
+  </picture>
+</a>
+
+**[Open the interactive platform map](https://opsight-intelligence.github.io/Opsight-Architecture-Overview/architecture.html)**
+
 Opsight is a **federated multi-domain intelligence platform**. Independent
 domain engines — spanning areas such as fraud, maritime, manufacturing, and
 AI-governance — each run their own **collect → assess** pipeline and publish a
