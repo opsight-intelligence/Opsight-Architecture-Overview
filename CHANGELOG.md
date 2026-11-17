@@ -5,6 +5,12 @@ All notable changes to this repository are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-11-17
+
+### Added
+- `LICENSE`: the overview and the map are published for viewing only, all rights reserved.
+- `.github/CODEOWNERS` naming the maintainer as owner of every path.
+
 ## [0.2.0] - 2026-11-02
 
 ### Added
